@@ -16,6 +16,10 @@
 package org.springframework.samples.petclinic.customers.web;
 
 import io.micrometer.core.annotation.Timed;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,19 +41,41 @@ import java.util.Optional;
 @Timed("petclinic.pet")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(
+    name = "Pets",
+    description = "Pets API"
+)
 class PetResource {
 
     private final PetRepository petRepository;
     private final OwnerRepository ownerRepository;
 
-
     @GetMapping("/petTypes")
+    @Operation(
+        summary = "Fetch all Pet Types."
+    )
+    @ApiResponse(
+        responseCode = "200"
+    )
     public List<PetType> getPetTypes() {
         return petRepository.findPetTypes();
     }
 
     @PostMapping("/owners/{ownerId}/pets")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+        summary = "Create a Pet."
+    )
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "201"
+            ),
+            @ApiResponse(
+                responseCode = "400"
+            )
+        }
+    )
     public Pet processCreationForm(
         @RequestBody PetRequest petRequest,
         @PathVariable("ownerId") @Min(1) int ownerId) {
