@@ -84,7 +84,7 @@ public class Owner {
 
     @Getter
     @Setter
-    @Column(name = "telephone")
+    @Column(name = "telephone",unique = true)
     @NotBlank
     @Digits(fraction = 0, integer = 12)
     private String telephone;

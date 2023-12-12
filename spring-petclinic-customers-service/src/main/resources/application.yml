@@ -3,7 +3,14 @@ spring:
     name: customers-service
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
-
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  sql:
+    init:
+      data-locations: classpath:data.sql
+      schema-locations: classpath:schema.sql
 
 ---
 spring:
