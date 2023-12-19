@@ -27,7 +27,7 @@ public class OwnerService {
         this.actorSystem = actorSystem;
         this.springAkkaExtension = springAkkaExtension;
         this.timeout = new Timeout(Duration.create(10, TimeUnit.SECONDS));
-        this.ownerActor = getOwnerActor();
+        this.ownerActor = initOwnerActor();
     }
 
     public Owner save(Owner owner) throws Exception {
@@ -55,7 +55,7 @@ public class OwnerService {
         }
     }
 
-    private ActorRef getOwnerActor() {
+    private ActorRef initOwnerActor() {
         return actorSystem
             .actorOf(springAkkaExtension
                 .props(SpringAkkaExtension.classNameToSpringName(OwnerActor.class)));

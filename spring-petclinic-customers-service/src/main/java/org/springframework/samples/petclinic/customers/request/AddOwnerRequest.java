@@ -1,5 +1,6 @@
 package org.springframework.samples.petclinic.customers.request;
 
+import akka.actor.ActorRef;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.samples.petclinic.customers.model.Pet;
