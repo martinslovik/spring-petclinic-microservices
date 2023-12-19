@@ -27,11 +27,21 @@ public class OwnerActor extends AbstractLoggingActor {
                 CircuitBreakerConstants.MAX_FAILURES,
                 CircuitBreakerConstants.CALL_TIMEOUT,
                 CircuitBreakerConstants.RESET_TIMEOUT)
-            .addOnOpenListener(this::notifyMeOnOpen);
+            .addOnOpenListener(this::notifyMeOnOpen)
+            .addOnHalfOpenListener(this::notifyMeOnHalfOpen)
+            .addOnCloseListener(this::notifyMeOnClose);
     }
 
     public void notifyMeOnOpen() {
-        log().warning("My CircuitBreaker is now open, and will not close for one minute");
+        log().warning("My CircuitBreaker is now open, and will not close for " + CircuitBreakerConstants.RESET_TIMEOUT.toSeconds() + " seconds");
+    }
+
+    public void notifyMeOnHalfOpen() {
+        log().warning("My CircuitBreaker is now half open");
+    }
+
+    public void notifyMeOnClose() {
+        log().warning("My CircuitBreaker is now closed");
     }
 
     @Override
@@ -63,6 +73,7 @@ public class OwnerActor extends AbstractLoggingActor {
                 return self();
             });
         } catch (Exception e) {
+            log().error("AddOwnerRequest: Exception occurred: " + e);
             log().error("AddOwnerRequest: Exception occurred: " + e.getMessage());
             sender().tell(e, self());
         }

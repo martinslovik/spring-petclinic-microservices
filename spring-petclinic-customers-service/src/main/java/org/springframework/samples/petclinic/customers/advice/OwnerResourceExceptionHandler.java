@@ -1,5 +1,6 @@
 package org.springframework.samples.petclinic.customers.advice;
 
+import akka.pattern.CircuitBreakerOpenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,4 +18,9 @@ public class OwnerResourceExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad Request: " + ex.getMessage());
     }
 
+    @ExceptionHandler(CircuitBreakerOpenException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    ResponseEntity<String> handleHttpMessageNotReadableException(CircuitBreakerOpenException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Circuit breaker open: " + ex.getMessage());
+    }
 }

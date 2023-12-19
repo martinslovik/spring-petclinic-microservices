@@ -21,15 +21,16 @@ public class OwnerService {
     private final ActorSystem actorSystem;
     private final SpringAkkaExtension springAkkaExtension;
     private final Timeout timeout;
+    private final ActorRef ownerActor;
 
     public OwnerService(ActorSystem actorSystem, SpringAkkaExtension springAkkaExtension) {
         this.actorSystem = actorSystem;
         this.springAkkaExtension = springAkkaExtension;
         this.timeout = new Timeout(Duration.create(10, TimeUnit.SECONDS));
+        this.ownerActor = getOwnerActor();
     }
 
     public Owner save(Owner owner) throws Exception {
-        ActorRef ownerActor = getOwnerActor();
         Future<Object> future = Patterns.ask(ownerActor, new AddOwnerRequest(
                 owner.getId(),
                 owner.getFirstName(),
