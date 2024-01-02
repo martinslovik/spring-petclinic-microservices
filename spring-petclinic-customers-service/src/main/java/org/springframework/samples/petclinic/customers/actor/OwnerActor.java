@@ -3,18 +3,22 @@ package org.springframework.samples.petclinic.customers.actor;
 import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.japi.pf.ReceiveBuilder;
 import akka.pattern.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.samples.petclinic.customers.actor.constants.CircuitBreakerConstants;
+import org.springframework.samples.petclinic.customers.actor.supervisor.ExceptionSupervisorStrategy;
 import org.springframework.samples.petclinic.customers.event.OwnerCreatedEvent;
 import org.springframework.samples.petclinic.customers.integration.akka.SpringAkkaExtension;
 import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.model.OwnerRepository;
 import org.springframework.samples.petclinic.customers.request.AddOwnerRequest;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -37,9 +41,9 @@ public class OwnerActor extends AbstractLoggingActor {
                 CircuitBreakerConstants.MAX_FAILURES,
                 CircuitBreakerConstants.CALL_TIMEOUT,
                 CircuitBreakerConstants.RESET_TIMEOUT)
-            .addOnOpenListener(this::notifyMeOnOpen)
-            .addOnHalfOpenListener(this::notifyMeOnHalfOpen)
-            .addOnCloseListener(this::notifyMeOnClose);
+            .addOnOpenListener(this::notifyOnOpen)
+            .addOnHalfOpenListener(this::notifyOnHalfOpen)
+            .addOnCloseListener(this::notifyOnClose);
     }
 
     private ActorRef initAnalyticsActor() {
@@ -48,15 +52,43 @@ public class OwnerActor extends AbstractLoggingActor {
                 .props(SpringAkkaExtension.classNameToSpringName(AnalyticsActor.class)));
     }
 
-    public void notifyMeOnOpen() {
+    public static Props props() {
+        return Props.create(OwnerActor.class, ExceptionSupervisorStrategy.strategy);
+    }
+
+    @Override
+    public void preRestart(Throwable reason, Optional<Object> message) throws Exception {
+        log().error(reason, "OwnerActor restarted due to exception: {}", reason.getMessage());
+        super.preRestart(reason, message);
+    }
+
+    @Override
+    public void postRestart(Throwable reason) throws Exception {
+        log().info("OwnerActor restarted");
+        super.postRestart(reason);
+    }
+
+    @Override
+    public void preStart() throws Exception {
+        log().info("OwnerActor started");
+        super.preStart();
+    }
+
+    @Override
+    public void postStop() throws Exception {
+        log().info("OwnerActor stopped");
+        super.postStop();
+    }
+
+    public void notifyOnOpen() {
         log().warning("My CircuitBreaker is now open, and will not close for " + CircuitBreakerConstants.RESET_TIMEOUT.toSeconds() + " seconds");
     }
 
-    public void notifyMeOnHalfOpen() {
+    public void notifyOnHalfOpen() {
         log().warning("My CircuitBreaker is now half open");
     }
 
-    public void notifyMeOnClose() {
+    public void notifyOnClose() {
         log().warning("My CircuitBreaker is now closed");
     }
 
@@ -92,6 +124,7 @@ public class OwnerActor extends AbstractLoggingActor {
         } catch (Exception e) {
             log().error("AddOwnerRequest: Exception occurred: " + e.getMessage());
             sender().tell(e, self());
+            throw e;
         }
     }
 }
