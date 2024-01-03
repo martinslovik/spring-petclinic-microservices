@@ -5,6 +5,7 @@ import akka.japi.pf.ReceiveBuilder;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.samples.petclinic.customers.event.OwnerCreatedEvent;
+import org.springframework.samples.petclinic.customers.event.OwnerUpdatedEvent;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,6 +17,7 @@ public class AnalyticsActor extends AbstractLoggingActor {
         return ReceiveBuilder
             .create()
             .match(OwnerCreatedEvent.class, this::logOwnerCreatedEvent)
+            .match(OwnerUpdatedEvent.class, this::logOwnerUpdatedEvent)
             .matchAny(msg -> {
                 log().warning("AnalyticsActor: Unhandled message received: " + msg);
                 unhandled(msg);
@@ -32,6 +34,11 @@ public class AnalyticsActor extends AbstractLoggingActor {
     }
 
     private void logOwnerCreatedEvent(OwnerCreatedEvent event) {
+        sleep();
+        log().info("AnalyticsActor: Received message: " + event.toString());
+    }
+
+    private void logOwnerUpdatedEvent(OwnerUpdatedEvent event) {
         sleep();
         log().info("AnalyticsActor: Received message: " + event.toString());
     }
