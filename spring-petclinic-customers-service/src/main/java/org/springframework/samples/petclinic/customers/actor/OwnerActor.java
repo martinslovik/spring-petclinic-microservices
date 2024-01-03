@@ -12,10 +12,15 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.samples.petclinic.customers.actor.constants.CircuitBreakerConstants;
 import org.springframework.samples.petclinic.customers.actor.supervisor.ExceptionSupervisorStrategy;
 import org.springframework.samples.petclinic.customers.event.OwnerCreatedEvent;
+import org.springframework.samples.petclinic.customers.event.OwnerUpdatedEvent;
 import org.springframework.samples.petclinic.customers.integration.akka.SpringAkkaExtension;
 import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.model.OwnerRepository;
 import org.springframework.samples.petclinic.customers.request.AddOwnerRequest;
+import org.springframework.samples.petclinic.customers.request.FindAllOwnersRequest;
+import org.springframework.samples.petclinic.customers.request.FindOwnerByIdRequest;
+import org.springframework.samples.petclinic.customers.request.UpdateOwnerRequest;
+import org.springframework.samples.petclinic.customers.web.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -97,6 +102,9 @@ public class OwnerActor extends AbstractLoggingActor {
         return ReceiveBuilder
             .create()
             .match(AddOwnerRequest.class, this::save)
+            .match(FindOwnerByIdRequest.class, this::findById)
+            .match(FindAllOwnersRequest.class, request -> findAll())
+            .match(UpdateOwnerRequest.class, this::update)
             .matchAny(msg -> {
                 log().warning("OwnerActor: Unhandled message received: " + msg);
                 unhandled(msg);
@@ -125,6 +133,59 @@ public class OwnerActor extends AbstractLoggingActor {
             log().error("AddOwnerRequest: Exception occurred: " + e.getMessage());
             sender().tell(e, self());
             throw e;
+        }
+    }
+
+    private void findById(FindOwnerByIdRequest findOwnerByIdRequest) {
+        log().info("FindOwnerByIdRequest: Received message: " + findOwnerByIdRequest.id());
+        try {
+            this.circuitBreaker.callWithSyncCircuitBreaker(() -> {
+                Owner owner = ownerRepository.findById(findOwnerByIdRequest.id()).orElseThrow();
+                sender().tell(owner, self());
+                return self();
+            });
+        } catch (Exception e) {
+            log().error("FindOwnerByIdRequest: Exception occurred: " + e.getMessage());
+            ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException(e.getMessage());
+            sender().tell(resourceNotFoundException, self());
+            throw resourceNotFoundException;
+        }
+    }
+
+    private void findAll() {
+        log().info("FindAllOwnersRequest: Received message");
+        try {
+            this.circuitBreaker.callWithSyncCircuitBreaker(() -> {
+                sender().tell(ownerRepository.findAll(), self());
+                return self();
+            });
+        } catch (Exception e) {
+            log().error("FindAllOwnersRequest: Exception occurred: " + e.getMessage());
+            sender().tell(e, self());
+            throw e;
+        }
+    }
+
+    private void update(UpdateOwnerRequest updateOwnerRequest) {
+        log().info("UpdateOwnerRequest: Received message: " + updateOwnerRequest.toString());
+        try {
+            this.circuitBreaker.callWithSyncCircuitBreaker(() -> {
+                Owner owner = ownerRepository.findById(updateOwnerRequest.id()).orElseThrow();
+                owner.setFirstName(updateOwnerRequest.firstName());
+                owner.setLastName(updateOwnerRequest.lastName());
+                owner.setAddress(updateOwnerRequest.address());
+                owner.setCity(updateOwnerRequest.city());
+                owner.setTelephone(updateOwnerRequest.telephone());
+                Owner updatedOwner = ownerRepository.save(owner);
+                sender().tell(updatedOwner, self());
+                analyticsActor.tell(new OwnerUpdatedEvent(updatedOwner), self());
+                return self();
+            });
+        } catch (Exception e) {
+            log().error("UpdateOwnerRequest: Exception occurred: " + e.getMessage());
+            ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException(e.getMessage());
+            sender().tell(resourceNotFoundException, self());
+            throw resourceNotFoundException;
         }
     }
 }

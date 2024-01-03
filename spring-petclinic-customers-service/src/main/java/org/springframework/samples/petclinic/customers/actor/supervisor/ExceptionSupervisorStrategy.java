@@ -4,6 +4,7 @@ import akka.actor.OneForOneStrategy;
 import akka.actor.SupervisorStrategy;
 import akka.japi.pf.DeciderBuilder;
 import akka.pattern.CircuitBreakerOpenException;
+import org.springframework.samples.petclinic.customers.web.ResourceNotFoundException;
 import scala.concurrent.duration.Duration;
 
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -25,6 +26,7 @@ public class ExceptionSupervisorStrategy {
                 .match(IllegalArgumentException.class, e -> SupervisorStrategy.stop())
                 .match(SQLIntegrityConstraintViolationException.class, e -> SupervisorStrategy.restart())
                 .match(CircuitBreakerOpenException.class, e -> SupervisorStrategy.resume())
+                .match(ResourceNotFoundException.class, e -> SupervisorStrategy.restart())
                 .matchAny(o -> SupervisorStrategy.escalate())
                 .build());
 }

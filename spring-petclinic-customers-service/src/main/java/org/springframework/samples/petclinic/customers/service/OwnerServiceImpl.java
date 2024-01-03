@@ -10,6 +10,7 @@ import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.request.AddOwnerRequest;
 import org.springframework.samples.petclinic.customers.request.FindAllOwnersRequest;
 import org.springframework.samples.petclinic.customers.request.FindOwnerByIdRequest;
+import org.springframework.samples.petclinic.customers.request.UpdateOwnerRequest;
 import org.springframework.stereotype.Service;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -83,14 +84,13 @@ public class OwnerServiceImpl  implements OwnerService {
 
     @Override
     public void update(int id, Owner owner) throws Exception {
-        Future<Object> future = Patterns.ask(ownerActor, new AddOwnerRequest(
+        Future<Object> future = Patterns.ask(ownerActor, new UpdateOwnerRequest(
                 id,
                 owner.getFirstName(),
                 owner.getLastName(),
                 owner.getAddress(),
                 owner.getCity(),
-                owner.getTelephone(),
-                owner.getPets()),
+                owner.getTelephone()),
             timeout);
 
         Object result = Await.result(future, timeout.duration());

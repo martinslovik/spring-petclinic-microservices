@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author Juergen Hoeller
@@ -61,16 +60,16 @@ class OwnerResource {
      * Read single Owner
      */
     @GetMapping(value = "/{ownerId}")
-    public Optional<Owner> findOwner(@PathVariable("ownerId") @Min(1) int ownerId) {
-        return ownerRepository.findById(ownerId);
+    public ResponseEntity<Owner> findOwner(@PathVariable("ownerId") @Min(1) int ownerId) throws Exception {
+        return ResponseEntity.of(ownerService.findById(ownerId));
     }
 
     /**
      * Read List of Owners
      */
     @GetMapping
-    public List<Owner> findAll() {
-        return ownerRepository.findAll();
+    public ResponseEntity<List<Owner>> findAll() throws Exception {
+        return ResponseEntity.ok(ownerService.findAll());
     }
 
     /**
@@ -78,17 +77,8 @@ class OwnerResource {
      */
     @PutMapping(value = "/{ownerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateOwner(@PathVariable("ownerId") @Min(1) int ownerId, @Valid @RequestBody Owner ownerRequest) {
-        final Optional<Owner> owner = ownerRepository.findById(ownerId);
-        final Owner ownerModel = owner.orElseThrow(() -> new ResourceNotFoundException("Owner "+ownerId+" not found"));
-
-        // This is done by hand for simplicity purpose. In a real life use-case we should consider using MapStruct.
-        ownerModel.setFirstName(ownerRequest.getFirstName());
-        ownerModel.setLastName(ownerRequest.getLastName());
-        ownerModel.setCity(ownerRequest.getCity());
-        ownerModel.setAddress(ownerRequest.getAddress());
-        ownerModel.setTelephone(ownerRequest.getTelephone());
-        log.info("Saving owner {}", ownerModel);
-        ownerRepository.save(ownerModel);
+    public ResponseEntity<Object> updateOwner(@PathVariable("ownerId") @Min(1) int ownerId, @Valid @RequestBody Owner ownerRequest) throws Exception {
+        ownerService.update(ownerId, ownerRequest);
+        return ResponseEntity.noContent().build();
     }
 }
