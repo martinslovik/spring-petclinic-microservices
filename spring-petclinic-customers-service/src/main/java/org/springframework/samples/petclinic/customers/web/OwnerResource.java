@@ -16,17 +16,16 @@
 package org.springframework.samples.petclinic.customers.web;
 
 import io.micrometer.core.annotation.Timed;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.customers.model.Owner;
-import org.springframework.samples.petclinic.customers.model.OwnerRepository;
 import org.springframework.samples.petclinic.customers.service.OwnerService;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import java.util.List;
 
 /**
@@ -42,8 +41,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 class OwnerResource {
-
-    private final OwnerRepository ownerRepository;
 
     private final OwnerService ownerService;
 

@@ -8,6 +8,9 @@ import org.springframework.samples.petclinic.customers.event.OwnerCreatedEvent;
 import org.springframework.samples.petclinic.customers.event.OwnerUpdatedEvent;
 import org.springframework.stereotype.Component;
 
+/**
+ * Actor responsible for handling analytics.
+ */
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class AnalyticsActor extends AbstractLoggingActor {
@@ -29,7 +32,8 @@ public class AnalyticsActor extends AbstractLoggingActor {
         try {
             Thread.sleep(10000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            log().info("AnalyticsActor: Sleep interrupted");
+            Thread.currentThread().interrupt();
         }
     }
 

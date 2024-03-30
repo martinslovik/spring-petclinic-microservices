@@ -1,0 +1,4 @@
+{
+  "cpuActive": true,
+  "cpuCronExpression": "0 */1 * * * ?"
+}

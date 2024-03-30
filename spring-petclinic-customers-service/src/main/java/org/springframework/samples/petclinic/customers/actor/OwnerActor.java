@@ -21,11 +21,14 @@ import org.springframework.samples.petclinic.customers.request.FindAllOwnersRequ
 import org.springframework.samples.petclinic.customers.request.FindOwnerByIdRequest;
 import org.springframework.samples.petclinic.customers.request.UpdateOwnerRequest;
 import org.springframework.samples.petclinic.customers.web.ResourceNotFoundException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@Component
+/**
+ * Actor responsible for handling owners.
+ */
+@Service
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class OwnerActor extends AbstractLoggingActor {
 
