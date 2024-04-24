@@ -1,6 +1,9 @@
 {
-    "latencyActive": false,
-    "exceptionsActive": false,
-    "killApplicationActive": false,
-    "memoryActive": false
+  "latencyActive": false,
+  "exceptionsActive": false,
+  "killApplicationActive": false,
+  "memoryActive": false,
+  "cpuActive": false,
+  "memoryCronExpression": "OFF",
+  "cpuCronExpression": "OFF"
 }
