@@ -66,7 +66,7 @@ public class OwnerActor extends AbstractLoggingActor {
 
     @Override
     public void preRestart(Throwable reason, Optional<Object> message) throws Exception {
-        log().error(reason, "OwnerActor restarted due to exception: {}", reason.getMessage());
+        log().error(reason, "OwnerActor restarting due to exception: {}", reason.getMessage());
         super.preRestart(reason, message);
     }
 
