@@ -20,7 +20,6 @@ import org.springframework.samples.petclinic.customers.request.AddOwnerRequest;
 import org.springframework.samples.petclinic.customers.request.FindAllOwnersRequest;
 import org.springframework.samples.petclinic.customers.request.FindOwnerByIdRequest;
 import org.springframework.samples.petclinic.customers.request.UpdateOwnerRequest;
-import org.springframework.samples.petclinic.customers.web.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -149,9 +148,8 @@ public class OwnerActor extends AbstractLoggingActor {
             });
         } catch (Exception e) {
             log().error("FindOwnerByIdRequest: Exception occurred: " + e.getMessage());
-            ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException(e.getMessage());
-            sender().tell(resourceNotFoundException, self());
-            throw resourceNotFoundException;
+            sender().tell(e, self());
+            throw e;
         }
     }
 
@@ -186,9 +184,8 @@ public class OwnerActor extends AbstractLoggingActor {
             });
         } catch (Exception e) {
             log().error("UpdateOwnerRequest: Exception occurred: " + e.getMessage());
-            ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException(e.getMessage());
-            sender().tell(resourceNotFoundException, self());
-            throw resourceNotFoundException;
+            sender().tell(e, self());
+            throw e;
         }
     }
 }

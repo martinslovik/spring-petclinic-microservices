@@ -6,8 +6,6 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.samples.petclinic.customers.actor.OwnerActor;
-import org.springframework.samples.petclinic.customers.actor.constants.CircuitBreakerConstants;
-import org.springframework.samples.petclinic.customers.exception.RetryException;
 import org.springframework.samples.petclinic.customers.integration.akka.SpringAkkaExtension;
 import org.springframework.samples.petclinic.customers.model.Owner;
 import org.springframework.samples.petclinic.customers.request.AddOwnerRequest;
@@ -15,7 +13,6 @@ import org.springframework.samples.petclinic.customers.request.FindAllOwnersRequ
 import org.springframework.samples.petclinic.customers.request.FindOwnerByIdRequest;
 import org.springframework.samples.petclinic.customers.request.UpdateOwnerRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -32,9 +29,9 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class OwnerServiceImpl implements OwnerService {
 
-    private static final int TIMEOUT_DURATION = 60;
-    private static final int MAX_RETRIES = CircuitBreakerConstants.MAX_FAILURES + 1;
-    private int retryCount = 0;
+    private static final int TIMEOUT_DURATION = 30;
+    public static final int RETRY_BACKOFF_DELAY = 1000;
+    public static final int RETRY_MAX_ATTEMPTS = 3;
 
     private final Timeout timeout;
     private final ActorSystem actorSystem;
@@ -65,104 +62,49 @@ public class OwnerServiceImpl implements OwnerService {
     }
 
     @Override
-    @Transactional
-    public Owner save(Owner owner) {
-        Owner savedOwner = null;
-        while (retryCount < MAX_RETRIES) {
-            try {
-                Future<Object> future = Patterns.ask(ownerActor, new AddOwnerRequest(
-                        owner.getId(),
-                        owner.getFirstName(),
-                        owner.getLastName(),
-                        owner.getAddress(),
-                        owner.getCity(),
-                        owner.getTelephone(),
-                        owner.getPets()),
-                    timeout);
-
-                Object result = Await.result(future, timeout.duration());
-                savedOwner = await(result, Owner.class);
-                break;
-            } catch (Exception e) {
-                retryCount++;
-                log.info("Failed to save owner, retrying...");
-            }
-        }
-
-        if (savedOwner == null) {
-            throw new RetryException("Failed to save owner after multiple retries");
-        }
-        return savedOwner;
+    public Owner save(Owner owner) throws Exception {
+        log.info("Attempting to save owner");
+        Future<Object> future = Patterns.ask(ownerActor, new AddOwnerRequest(
+                owner.getId(),
+                owner.getFirstName(),
+                owner.getLastName(),
+                owner.getAddress(),
+                owner.getCity(),
+                owner.getTelephone(),
+                owner.getPets()),
+            timeout);
+        Object result = Await.result(future, timeout.duration());
+        return await(result, Owner.class);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Optional<Owner> findById(int id) {
-        Optional<Owner> owner = Optional.empty();
-        while (retryCount < MAX_RETRIES) {
-            try {
-                Future<Object> future = Patterns.ask(ownerActor, new FindOwnerByIdRequest(id), timeout);
-                Object result = Await.result(future, timeout.duration());
-                owner = Optional.ofNullable(await(result, Owner.class));
-                break;
-            } catch (Exception e) {
-                retryCount++;
-                log.info("Failed to fetch owner, retrying...");
-            }
-        }
-
-        if (owner == null || owner.isEmpty()) {
-            throw new RetryException("Failed to fetch owner after multiple retries");
-        }
-        return owner;
+    public Optional<Owner> findById(int id) throws Exception {
+        log.info("Attempting to find owner by id");
+        Future<Object> future = Patterns.ask(ownerActor, new FindOwnerByIdRequest(id), timeout);
+        Object result = Await.result(future, timeout.duration());
+        return Optional.ofNullable(await(result, Owner.class));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Owner> findAll() {
-        List<Owner> owners = null;
-
-        while (retryCount < MAX_RETRIES) {
-            try {
-                Future<Object> future = Patterns.ask(ownerActor, new FindAllOwnersRequest(), timeout);
-                Object result = Await.result(future, timeout.duration());
-                owners = await(result, List.class);
-                break;
-            } catch (Exception e) {
-                retryCount++;
-                log.info("Exception: " + e.getMessage());
-                log.info("Failed to fetch owners, retrying...");
-            }
-        }
-
-        if (owners == null) {
-            throw new RetryException("Failed to fetch owners after multiple retries");
-        }
-
-        return owners;
+    public List<Owner> findAll() throws Exception {
+        log.info("Attempting to find all owners");
+        Future<Object> future = Patterns.ask(ownerActor, new FindAllOwnersRequest(), timeout);
+        Object result = Await.result(future, timeout.duration());
+        return await(result, List.class);
     }
 
     @Override
-    @Transactional
-    public void update(int id, Owner owner) {
-        while (retryCount < MAX_RETRIES) {
-            try {
-                Future<Object> future = Patterns.ask(ownerActor, new UpdateOwnerRequest(
-                        id,
-                        owner.getFirstName(),
-                        owner.getLastName(),
-                        owner.getAddress(),
-                        owner.getCity(),
-                        owner.getTelephone()),
-                    timeout);
+    public void update(int id, Owner owner) throws Exception {
+        Future<Object> future = Patterns.ask(ownerActor, new UpdateOwnerRequest(
+                id,
+                owner.getFirstName(),
+                owner.getLastName(),
+                owner.getAddress(),
+                owner.getCity(),
+                owner.getTelephone()),
+            timeout);
 
-                Object result = Await.result(future, timeout.duration());
-                await(result, Owner.class);
-                break;
-            } catch (Exception e) {
-                retryCount++;
-                log.info("Failed to update owner, retrying...");
-            }
-        }
+        Object result = Await.result(future, timeout.duration());
+        await(result, Owner.class);
     }
 }

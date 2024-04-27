@@ -21,13 +21,19 @@ public class OwnerResourceExceptionHandler {
 
     @ExceptionHandler(CircuitBreakerOpenException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    ResponseEntity<String> handleHttpMessageNotReadableException(CircuitBreakerOpenException ex) {
+    ResponseEntity<String> handleHttpCircuitBreakerException(CircuitBreakerOpenException ex) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Circuit breaker open: " + ex.getMessage());
     }
 
     @ExceptionHandler(RetryException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    ResponseEntity<String> handleHttpMessageNotReadableException(RetryException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Retry exception: " + ex.getMessage());
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    ResponseEntity<String> handleRetryException(RetryException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Retry exception: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    ResponseEntity<String> handleUnexpectedException(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Please try again later: " + e.getMessage());
     }
 }

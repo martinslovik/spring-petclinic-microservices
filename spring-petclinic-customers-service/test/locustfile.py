@@ -8,16 +8,6 @@ class OwnerBehavior(HttpUser):
         self.client.get("/owners/1")
 
     @task(1)
-    def update_owner(self):
-        self.client.put("/owners/1", json={
-            "firstName": "Jane",
-            "lastName": "Doe",
-            "address": "123 Main St",
-            "city": "Springfield",
-            "telephone": "5555555555"
-        })
-
-    @task(1)
     def read_all_owners(self):
         self.client.get("/owners")
 
@@ -36,16 +26,6 @@ class OwnerBehavior(HttpUser):
         self.client.get("/owners/2")
 
     @task(1)
-    def update_owner_2(self):
-        self.client.put("/owners/2", json={
-            "firstName": "Bob",
-            "lastName": "Smith",
-            "address": "456 Main St",
-            "city": "Springfield",
-            "telephone": "5555555556"
-        })
-
-    @task(1)
     def create_owner_3(self):
         self.client.post("/owners", json={
             "firstName": "Charlie",
@@ -58,16 +38,6 @@ class OwnerBehavior(HttpUser):
     @task(2)
     def read_owner_3(self):
         self.client.get("/owners/3")
-
-    @task(1)
-    def update_owner_3(self):
-        self.client.put("/owners/3", json={
-            "firstName": "Snoopy",
-            "lastName": "Brown",
-            "address": "789 Main St",
-            "city": "Springfield",
-            "telephone": "5555555557"
-        })
 
 class WebsiteUser(OwnerBehavior):
     pass
